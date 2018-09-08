@@ -62,23 +62,27 @@ int ray_cylinder_intersection(ray_t observer, cylinder_t obj, vector_t *intersec
  if (cross_product(obj.axis, observer.dir) != 0) {
     vector_t a = obj.axis; vector_t c = obj.center; double r = obj.radius; double h = obj.height;
       vector_t s = observer.start;  vector_t d = observer.dir;
-      double t;
+     
+	   
+		  
+  return 0;
+}
+
+ int ray_cone_intersection(ray_t observer, cone_t obj, vector_t *intersection){
+      vector_t n = obj.axis; vector_t c = obj.vertex;
+      vector_t s = observer.start;  vector_t d = observer.dir;
+      double t = (dot_product(n, difference(c, s)) / (dot_product(n, d)));
       if (t >= 0) {
 	double r = obj.radius;
 	vector_t p = sum(s, scalar_product(t, d));
 	if (magnitude(difference(p, c)) < r) {
 	  copy_vector(p, intersection);
 	  return 1;
-	}
+	
       }
-    
+    }
     
 	   
 		  
-  return 0;
-}
-
-int ray_cone_intersection(ray_t observer, cone_t obj, vector_t *intersection) {
-  //Question 7: Modify this function to compute an intersection
   return 0;
 }
