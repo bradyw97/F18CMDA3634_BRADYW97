@@ -46,7 +46,6 @@ int main(int argc, char **argv){
 
   else {
 
-    double estpi = 0;
     
     srand48(rank);
   
