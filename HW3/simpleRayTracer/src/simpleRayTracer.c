@@ -94,10 +94,12 @@ int main(int argc, char *argv[]){
     /* sort objects into grid */
     gridPopulate(grid, scene->Nshapes, shapes);
 
-    
+    int pixCount = WIDTH*HEIGHT;
+
+    double startTime, endTime;
     /* start timer */
     if (rank == 0) {
-      ticTimer(); }
+      startTime = MPI_Wtime(); }
     /* render scene */
     renderKernel(WIDTH,
 		 HEIGHT,
@@ -109,37 +111,37 @@ int main(int argc, char *argv[]){
 		 img);
 
 
-    printf("entries: %d\n", WIDTH*HEIGHT*3);
+    printf("entries: %d\n", pixCount*3);
     
     // let only rank 0 receive pixels from other ranks
     if (rank == 0) {
       	printf("is rank 0\n");
       MPI_Status status;
-      unsigned char pixel;
-      for (int r = 1; r < size; ++r) {
-         for (int i = 0; i < WIDTH*HEIGHT*3/size; ++i) { 
-            MPI_Recv(&pixel, 1, MPI_UNSIGNED_CHAR, r, 999, MPI_COMM_WORLD, &status);
-	    img[WIDTH*HEIGHT*3-(r*WIDTH*HEIGHT*3/size + i)] = pixel;
-	    if (i % 100 == 0){
-	      printf("%d recv'd\n", i);}
-	 }
+      unsigned char pixels[pixCount*3/size];
+      for (int r = 1; r < size; ++r) { 
+            MPI_Recv(&pixels[0], pixCount*3/size, MPI_UNSIGNED_CHAR, r, 999, MPI_COMM_WORLD, &status);
+	   
 	 printf("rank %d recvd\n", r);
-      }
+       for (int i = 0; i < pixCount*3/size; ++i) {
+	    img[pixCount*3-(r*pixCount*3/size + i)] = pixels[pixCount*3/size-1-i];
+	    }
 
+      }
     }
     // if not rank 0 then send pixels to rank 0
     else {
 
-      for (int i = 0; i < WIDTH*HEIGHT*3/size; ++i) {
-	MPI_Send(&img[WIDTH*HEIGHT*3-i], 1, MPI_UNSIGNED_CHAR, 0, 999, MPI_COMM_WORLD);
-      }
+	MPI_Send(&img[pixCount*3-pixCount*3/size-1], pixCount*3/size, MPI_UNSIGNED_CHAR, 0, 999, MPI_COMM_WORLD);
+      
     }
   
 
      
     /* report elapsed time */
-    if (rank == 0) 
-      tocTimer("recursiveRenderKernel");
+    if (rank == 0) {
+      endTime = MPI_Wtime();
+      printf("elapsed time with %d ranks: %f\n", size, endTime-startTime);
+    }
     
     dfloat dt = .025, g = 1;
     int NsubSteps= 40;
