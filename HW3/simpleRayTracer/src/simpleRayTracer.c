@@ -94,10 +94,10 @@ int main(int argc, char *argv[]){
     /* sort objects into grid */
     gridPopulate(grid, scene->Nshapes, shapes);
 
-    /* start timer */
-    if (rank == 0)
-      ticTimer();
     
+    /* start timer */
+    if (rank == 0) {
+      ticTimer(); }
     /* render scene */
     renderKernel(WIDTH,
 		 HEIGHT,
@@ -109,11 +109,32 @@ int main(int argc, char *argv[]){
 		 img);
 
 
+    printf("entries: %d\n", WIDTH*HEIGHT*3);
     
-    /*Q4 and Q5: All communication between threads should go here
-     *
-     */
+    // let only rank 0 receive pixels from other ranks
+    if (rank == 0) {
+      	printf("is rank 0\n");
+      MPI_Status status;
+      unsigned char pixel;
+      for (int r = 1; r < size; ++r) {
+         for (int i = 0; i < WIDTH*HEIGHT*3/size; ++i) { 
+            MPI_Recv(&pixel, 1, MPI_UNSIGNED_CHAR, r, 999, MPI_COMM_WORLD, &status);
+	    img[WIDTH*HEIGHT*3-(r*WIDTH*HEIGHT*3/size + i)] = pixel;
+	    if (i % 100 == 0){
+	      printf("%d recv'd\n", i);}
+	 }
+	 printf("rank %d recvd\n", r);
+      }
 
+    }
+    // if not rank 0 then send pixels to rank 0
+    else {
+
+      for (int i = 0; i < WIDTH*HEIGHT*3/size; ++i) {
+	MPI_Send(&img[WIDTH*HEIGHT*3-i], 1, MPI_UNSIGNED_CHAR, 0, 999, MPI_COMM_WORLD);
+      }
+    }
+  
 
      
     /* report elapsed time */
@@ -152,9 +173,10 @@ int main(int argc, char *argv[]){
     *
     *
     */
-    
-    sprintf(fileName, "images/image_%05d_rk%d.ppm", thetaId,rank);
-    saveppm(fileName, img, WIDTH, HEIGHT);
+    if (rank == 0) {
+      sprintf(fileName, "images/image_%05d_rk%d.ppm", thetaId,rank);
+      saveppm(fileName, img, WIDTH, HEIGHT);
+    }
 
   }
   

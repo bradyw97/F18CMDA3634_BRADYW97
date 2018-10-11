@@ -28,7 +28,11 @@ void renderKernel(const int NI,
    *
    */
 
-  for(int J=0;J<NJ;++J){
+  int rank, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size); 
+
+  for(int J=NJ*rank/size;J<NJ*(rank+1)/size;++J){
     for(int I=0;I<NI;++I){
       ray_t r;
       
@@ -127,4 +131,5 @@ void renderKernel(const int NI,
       img[(I + (NJ-1-J)*NI)*3 + 2] = (unsigned char)min( c.blue*255.0f, 255.0f);
     }  
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 }
