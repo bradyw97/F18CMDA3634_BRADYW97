@@ -1,16 +1,16 @@
-# define variables
+export LDFLAGS="-L$MPE_LIB -llmpe -lmpe -lm -mpilog -lpthread -lstdc++"export LDFLAGS="-L$MPE_LIB -llmpe -lmpe -lm -mpilog -lpthread -lstdc++"# define variables
 HDRDIR  = ./
 
 # set options for this machine
 # specify which compilers to use for c and linking
-CC	= mpic++
-LD	= mpic++
+CC	= mpecc
+LD	= mpecc
 
 # compiler flags to be used (set to compile with debugging on)
-CFLAGS = -I$(HDRDIR)  -Ddfloat=double -DdfloatString='"%lg"' -g -O3
+CFLAGS = -I$(HDRDIR)  -Ddfloat=double -DdfloatString='"%lg"' -g -O3 -L$MPE_LIB -llmpe -lmpe -lm -mpilog -lpthread -lstdc++ -mpicc='mpic++'
 
 # link flags to be used 
-LDFLAGS	= -g -O3
+LDFLAGS	= -g -O3 -L$MPE_LIB -llmpe -lmpe -lm -mpilog -lpthread -lstdc++ -mpicc='mpic++'
 
 # libraries to be linked in
 LIBS	=  -lm 
