@@ -111,7 +111,7 @@ int main(int argc, char **argv){
   end = omp_get_wtime(); //start time in CPU cycles
   
   // print elapsed time
-  printf("elapsed = %f\n", ((double)(end-start))/CLOCKS_PER_SEC);
+  printf("elapsed = %f\n", (end-start)/CLOCKS_PER_SEC);
   
   // output mandelbrot to png format image
   printf("Printing mandelbrot.ppm...");
