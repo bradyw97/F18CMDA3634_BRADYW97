@@ -13,7 +13,7 @@
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 
 /* Width and height of out image */
-#define SCALE 0.25
+#define SCALE 1.6
 #define WIDTH  (2048*SCALE)
 #define HEIGHT (1440*SCALE)
 #define DEPTH  (2048*SCALE)
