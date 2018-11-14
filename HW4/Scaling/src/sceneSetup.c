@@ -13,6 +13,7 @@ scene_t *sceneSetup(){
 
   dfloat L = BOXSIZE;
   
+ 
   int Nmaterials = 64;
   material_t *materials = (material_t*) calloc(Nmaterials, sizeof(material_t));
 
