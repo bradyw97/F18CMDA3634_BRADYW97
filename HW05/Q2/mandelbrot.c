@@ -82,7 +82,7 @@ int main(int argc, char **argv){
 
   // Parameters for a bounding box for "c" that generates an interesting image
   const float centRe = -.759856, centIm= .125547;
-  const float diam  = 0.07;
+  const float diam  = 0.099;
 
   complex_t cmin; 
   complex_t cmax;
