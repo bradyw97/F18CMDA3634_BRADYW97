@@ -3,14 +3,14 @@ HDRDIR  = ./
 
 # set options for this machine
 # specify which compilers to use for c and linking
-CC	= g++
-LD	= g++
+CC	= nvcc
+LD	= nvcc
 
 # compiler flags to be used (set to compile with debugging on)
-CFLAGS = -I$(HDRDIR)  -Ddfloat=double -DdfloatString='"%lg"' -O3
+CFLAGS = -I$(HDRDIR) -O3 --use_fast_math -arch=sm_60 \-dc -Ddfloat=double -DdfloatString=’"%lg"’
 
 # link flags to be used 
-LDFLAGS	= -O3
+LDFLAGS	= -O3 -arch-sm_60
 
 # libraries to be linked in
 LIBS	=  -lm 
@@ -21,8 +21,8 @@ LIBS	=  -lm
 # rule for .c files
 HDR = simpleRayTracer.h
 
-%.o:%.c $(HDR)
-	$(CC) $(CFLAGS) -o $*.o -c $*.c
+%.o:%.cu $(HDR)
+	$(CC) $(CFLAGS) -o $*.o -c $*.cu
 
 # list of objects to be compiled
 SOBJS = src/sensor.o src/simpleRayTracer.o src/render.o src/utils.o src/grid.o src/saveppm.o src/sceneSetup.o src/readPlyModel.o src/intersectionTests.o src/shape.o src/projectionTests.o src/boundingBoxes.o src/sphereDynamics.o

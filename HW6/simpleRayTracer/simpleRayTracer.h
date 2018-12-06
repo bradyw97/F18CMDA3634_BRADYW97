@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdbool.h> /* Needed for boolean datatype */
 #include <math.h>
+#include <cuda.h>
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #define max(a,b) (((a) > (b)) ? (a) : (b))
@@ -203,6 +204,9 @@ typedef struct{
   int *boxContents;
   bbox_t  *bboxes;
   int     *boxStarts;
+  int *c_boxContents;
+  bbox_t  *c_bboxes;
+  int     *c_boxStarts;
 
 }grid_t;
 
@@ -210,29 +214,34 @@ void saveppm(char *filename, unsigned char *img, int width, int height);
 
 
 
-vector_t vectorCreate(dfloat x, dfloat y, dfloat z);
-vector_t vectorSub(const vector_t v1, const vector_t v2);
-dfloat   vectorDot(const vector_t v1, const vector_t v2);
-vector_t vectorCrossProduct(const vector_t v1, const vector_t v2);
-vector_t vectorScale(const dfloat c, const vector_t v);
-vector_t vectorAdd(const vector_t v1, const vector_t v2);
-dfloat   vectorTripleProduct(const vector_t a, const vector_t b, const vector_t c);
-vector_t vectorNormalize(const vector_t a);
-dfloat   vectorNorm(const vector_t a);
-vector_t vectorOrthogonalize(const vector_t a, const vector_t b);
+__host__ __device__ vector_t vectorCreate(dfloat x, dfloat y, dfloat z);
+__host__ __device__ vector_t vectorSub(const vector_t v1, const vector_t v2);
+__host__ __device__ dfloat   vectorDot(const vector_t v1, const vector_t v2);
+__host__ __device__ vector_t vectorCrossProduct(const vector_t v1, const vector_t v2);
+__host__ __device__ vector_t vectorScale(const dfloat c, const vector_t v);
+__host__ __device__ vector_t vectorAdd(const vector_t v1, const vector_t v2);
+__host__ __device__ dfloat   vectorTripleProduct(const vector_t a, const vector_t b, const vector_t c);
+__host__ __device__ vector_t vectorNormalize(const vector_t a);
+__host__ __device__ dfloat   vectorNorm(const vector_t a);
+__host__ __device__ vector_t vectorOrthogonalize(const vector_t a, const vector_t b);
 
 typedef struct{
 
   int Nmaterials;
   material_t *materials;
+  material_t *c_materials;
 
   int Nshapes;
   shape_t *shapes;
+  shape_t *c_shapes;
   
   int Nlights;
   light_t *lights;
+  light_t *c_lights;
 
   grid_t grid;
+
+  
   
 } scene_t;
 
@@ -249,28 +258,28 @@ void render(const scene_t *scene,
 void saveImage(char *filename, unsigned char *img, int W, int H);
 
 
-bool intersectRayTriangle(const ray_t r, const triangle_t tri, dfloat *t);
-bool intersectRayRectangle(const ray_t r, const rectangle_t rect, dfloat *t);
-bool intersectRaySphere(const ray_t r, const sphere_t s, dfloat *t);
-bool intersectRayCone(const ray_t r, const cone_t cone, dfloat *t);
-bool intersectRayDisk(const ray_t r, const disk_t disk, dfloat *t);
-bool intersectRayCylinder(const ray_t r, const cylinder_t cylinder, dfloat *t);
-bool intersectPointGridCell(const grid_t grid,
+__device__ bool intersectRayTriangle(const ray_t r, const triangle_t tri, dfloat *t);
+__device__ bool intersectRayRectangle(const ray_t r, const rectangle_t rect, dfloat *t);
+__device__ bool intersectRaySphere(const ray_t r, const sphere_t s, dfloat *t);
+__device__ bool intersectRayCone(const ray_t r, const cone_t cone, dfloat *t);
+__device__ bool intersectRayDisk(const ray_t r, const disk_t disk, dfloat *t);
+__device__ bool intersectRayCylinder(const ray_t r, const cylinder_t cylinder, dfloat *t);
+__device__ bool intersectPointGridCell(const grid_t grid,
 			    const vector_t p,
 			    const int cellI,
 			    const int cellJ,
 			    const int cellK);
-unsigned int intersectRayBox(ray_t *r, const bbox_t bbox);
+__device__ unsigned int intersectRayBox(ray_t *r, const bbox_t bbox);
 
-bool intersectRayShape(const ray_t r, const shape_t *s, dfloat *t);
-bool solveQuadratic(const dfloat a, const dfloat b, const dfloat c, dfloat *x0, dfloat *x1);
+__device__ bool intersectRayShape(const ray_t r, const shape_t *s, dfloat *t);
+__host__ __device__ bool solveQuadratic(const dfloat a, const dfloat b, const dfloat c, dfloat *x0, dfloat *x1);
 
-int iclamp(dfloat x, dfloat xmin, dfloat xmax);
+__host__ __device__ int iclamp(dfloat x, dfloat xmin, dfloat xmax);
 dfloat clamp(dfloat x, dfloat xmin, dfloat xmax);
 
-vector_t shapeComputeNormal(const vector_t v, const shape_t s);
+__host__ __device__ vector_t shapeComputeNormal(const vector_t v, const shape_t s);
 
-material_t shapeComputeMaterial(const int Nmaterials, const material_t *materials,
+__device__ material_t shapeComputeMaterial(const int Nmaterials, const material_t *materials,
 				const vector_t v, const shape_t s);
 
 bbox_t createBoundingBoxTriangle(triangle_t triangle);
@@ -283,7 +292,7 @@ bbox_t createBoundingBoxShape(const grid_t grid, shape_t shape);
 
 void gridCountShapesInCellsKernel(const grid_t grid, const int Nshapes, shape_t *shapes, int *counts);
 
-colour_t gridTrace(const grid_t grid,
+__device__ colour_t gridTrace(const grid_t grid,
 		   const int Nshapes,
 		   const shape_t *shapes,
 		   const int Nlights,
@@ -305,7 +314,7 @@ dfloat projectPointShape(const vector_t p, const shape_t shape, vector_t *closes
 
 void interpolateScene(const int NI, const int NJ, unsigned char *img);
 
-vector_t sensorLocation(const int NI,
+__device__ vector_t sensorLocation(const int NI,
 			const int NJ,
 			const int I,
 			const int J,
@@ -313,13 +322,16 @@ vector_t sensorLocation(const int NI,
 
 void gridPopulate(grid_t *grid, int Nshapes, shape_t *shapes);
 
-void renderKernel(const int NI,
+dim3 blockSize(NI,NJ,NK);
+dim3 blockNum(WIDTH,HEIGHT,1);
+
+__global__ void renderKernel << blockSize, blockNum >> (const int NI,
 		  const int NJ,
 		  const scene_t scene,
 		  const sensor_t sensor,
 		  const dfloat costheta,
 		  const dfloat sintheta,
-		  unsigned char *img);
+		  unsigned char *c_img);
 
 void readPlyModel(const char *fileName, int *Ntriangles, triangle_t **triangles);
 
